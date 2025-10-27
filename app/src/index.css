@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Source+Sans+Pro:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: only light;
+  font-family: 'Source Sans Pro', ui-sans-serif, system-ui;
+  background-color: #f6f1e5;
+}
+
+body {
+  margin: 0;
+  background-color: #f6f1e5;
+  color: #2c2a29;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
