@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
+import { useAuth } from './context/AuthContext';
 
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const AppLayout = lazy(() => import('./components/layout/AppLayout'));
@@ -15,7 +16,7 @@ export default function App() {
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-500">Loading CoinMatch...</div>}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route element={<AppLayout />}>
+        <Route element={<ProtectedLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="missing-coins" element={<MissingCoinsPage />} />
@@ -28,4 +29,18 @@ export default function App() {
       </Routes>
     </Suspense>
   );
+}
+
+function ProtectedLayout() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-stone-500">Checking credentials…</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <AppLayout />;
 }
