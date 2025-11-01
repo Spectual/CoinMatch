@@ -1,10 +1,11 @@
 import { ArrowUpRightIcon, ClockIcon, RectangleStackIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import SummaryCard from '../components/cards/SummaryCard';
-import { matchHistory, museumCoins, candidateCoins } from '../data/mockData';
+import { useData } from '../context/DataContext';
 import { formatCoinTitle, formatIsoDate } from '../utils/coinFormatting';
 
 export default function DashboardPage() {
+  const { museumCoins, candidateCoins, matchHistory } = useData();
   const pendingReviews = matchHistory.filter((m) => m.status === 'Pending');
   const confirmedMatches = matchHistory.filter((m) => m.status === 'Confirmed');
   const topCandidates = [...candidateCoins].sort((a, b) => b.similarityScore - a.similarityScore).slice(0, 3);
@@ -117,7 +118,7 @@ export default function DashboardPage() {
             </thead>
             <tbody className="divide-y divide-stone-100 bg-white/70">
               {latestHistory.map((record) => {
-                const museum = museumCoins.find((coin) => coin.coin_id === record.coinId);
+                  const museum = museumCoins.find((coin) => coin.coin_id === record.coinId);
                 const candidate = candidateCoins.find((entry) => entry.id === record.candidateId);
                 return (
                   <tr key={record.id} className="transition hover:bg-parchment/40">

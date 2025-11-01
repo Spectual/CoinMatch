@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AdjustmentsHorizontalIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { museumCoins } from '../data/mockData';
+import { useData } from '../context/DataContext';
 import { formatAuthorityLine, formatCoinTitle, formatIsoDate, formatMeasurements } from '../utils/coinFormatting';
 
 export default function MissingCoinsPage() {
+  const { museumCoins } = useData();
   const [query, setQuery] = useState('');
   const [mintFilter, setMintFilter] = useState('All Mints');
   const [authorityFilter, setAuthorityFilter] = useState('All Authorities');

@@ -10,7 +10,8 @@ import {
   BookOpenIcon
 } from '@heroicons/react/24/outline';
 import CoinImage from '../components/common/CoinImage';
-import { candidateCoins, matchHistory, museumCoins } from '../data/mockData';
+import { useData } from '../context/DataContext';
+import { useToast } from '../context/ToastContext';
 import {
   formatAuctionEvent,
   formatAuthorityLine,
@@ -22,17 +23,19 @@ import {
 export default function CoinDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { museumCoins, candidateCoins, matchHistory } = useData();
+  const { pushToast } = useToast();
   const coin = museumCoins.find((entry) => entry.coin_id === id) ?? museumCoins[0];
 
   const relatedMatches = useMemo(
     () => matchHistory.filter((record) => record.coinId === coin.coin_id),
-    [coin.coin_id]
+    [coin.coin_id, matchHistory]
   );
   const suggestedCandidates = useMemo(() => {
     const related = candidateCoins.filter((candidate) => candidate.museumCoinId === coin.coin_id);
     if (related.length > 0) return related;
     return [...candidateCoins].sort((a, b) => b.similarityScore - a.similarityScore).slice(0, 3);
-  }, [coin.coin_id]);
+  }, [candidateCoins, coin.coin_id]);
   const referenceList = coin.reference_list ? coin.reference_list.split(';').map((item) => item.trim()).filter(Boolean) : [];
 
   return (
@@ -64,9 +67,31 @@ export default function CoinDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
-          <ActionButton icon={<PhotoIcon className="h-5 w-5" />} label="Run Image Match" onClick={() => navigate('/search?mode=image')} />
-          <ActionButton icon={<DocumentMagnifyingGlassIcon className="h-5 w-5" />} label="Run Text Match" onClick={() => navigate('/search?mode=text')} />
-            <ActionButton icon={<ArrowPathIcon className="h-5 w-5" />} label="View Match History" onClick={() => navigate('/history')} variant="outline" />
+          <ActionButton
+            icon={<PhotoIcon className="h-5 w-5" />}
+            label="Run Image Match"
+            onClick={() => {
+              pushToast({
+                variant: 'info',
+                title: 'Image search launching',
+                description: 'Switching to candidate search workspace with image mode active.'
+              });
+              navigate('/search?mode=image');
+            }}
+          />
+          <ActionButton
+            icon={<DocumentMagnifyingGlassIcon className="h-5 w-5" />}
+            label="Run Text Match"
+            onClick={() => {
+              pushToast({
+                variant: 'info',
+                title: 'Text search launching',
+                description: 'Use catalog numbers, legends, or provenance cues to refine results.'
+              });
+              navigate('/search?mode=text');
+            }}
+          />
+          <ActionButton icon={<ArrowPathIcon className="h-5 w-5" />} label="View Match History" onClick={() => navigate('/history')} variant="outline" />
         </div>
       </header>
 
@@ -186,6 +211,7 @@ export default function CoinDetailPage() {
                   <span>{record.source}</span>
                   <span>{formatIsoDate(record.savedAt)}</span>
                 </div>
+                {record.notes ? <p className="mt-2 text-xs text-stone-500">{record.notes}</p> : null}
               </li>
             ))}
             {relatedMatches.length === 0 ? (

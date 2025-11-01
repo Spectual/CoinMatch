@@ -61,4 +61,5 @@ export interface MatchRecord {
   status: 'Confirmed' | 'Rejected' | 'Pending';
   savedAt: string;
   source: string;
+  notes?: string;
 }

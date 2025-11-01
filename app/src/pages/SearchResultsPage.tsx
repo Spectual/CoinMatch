@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AdjustmentsHorizontalIcon, ArrowPathIcon, PhotoIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import CoinImage from '../components/common/CoinImage';
-import { candidateCoins, museumCoins } from '../data/mockData';
+import { useData } from '../context/DataContext';
 import { formatAuthorityLine, formatCoinTitle, formatIsoDate, formatMeasurements } from '../utils/coinFormatting';
 import type { CandidateCoin } from '../types';
 
@@ -15,6 +15,7 @@ export default function SearchResultsPage() {
   const [params] = useSearchParams();
   const mode = params.get('mode') === 'text' ? 'text' : 'image';
   const navigate = useNavigate();
+  const { candidateCoins, museumCoins } = useData();
   const DEFAULT_MIN_SCORE = 0.7;
   const [sort, setSort] = useState<'score' | 'date'>('score');
   const [minScore, setMinScore] = useState(DEFAULT_MIN_SCORE);

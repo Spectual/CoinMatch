@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-import { candidateCoins, matchHistory, museumCoins } from '../data/mockData';
+import { useData } from '../context/DataContext';
 import { formatIsoDate, formatCoinTitle } from '../utils/coinFormatting';
 
 const statusFilters = ['All statuses', 'Confirmed', 'Pending', 'Rejected'] as const;
 
 export default function MatchHistoryPage() {
+  const { matchHistory, museumCoins, candidateCoins } = useData();
   const [status, setStatus] = useState<(typeof statusFilters)[number]>('All statuses');
   const [search, setSearch] = useState('');
 
@@ -78,6 +79,7 @@ export default function MatchHistoryPage() {
               <th className="px-5 py-3">Similarity</th>
               <th className="px-5 py-3">Status</th>
               <th className="px-5 py-3">Saved</th>
+              <th className="px-5 py-3">Notes</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100 bg-white">
@@ -94,12 +96,13 @@ export default function MatchHistoryPage() {
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeClass(record.status)}`}>{record.status}</span>
                   </td>
                   <td className="px-5 py-3 text-sm text-stone-500">{formatIsoDate(record.savedAt)}</td>
+                  <td className="px-5 py-3 text-xs text-stone-500">{record.notes ?? '—'}</td>
                 </tr>
               );
             })}
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-12 text-center text-sm text-stone-500">
+                <td colSpan={7} className="px-5 py-12 text-center text-sm text-stone-500">
                   No history records match your filters. Adjust the status and search terms.
                 </td>
               </tr>

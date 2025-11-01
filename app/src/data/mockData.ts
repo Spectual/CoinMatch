@@ -244,7 +244,8 @@ export const matchHistory: MatchRecord[] = [
     similarityScore: 0.87,
     status: 'Confirmed',
     savedAt: '2024-03-12T15:45:00Z',
-    source: 'CNG Triton XXVII'
+    source: 'CNG Triton XXVII',
+    notes: 'Reverse die matches Dewing plate.'
   },
   {
     id: 'match-1002',
@@ -255,7 +256,8 @@ export const matchHistory: MatchRecord[] = [
     similarityScore: 0.81,
     status: 'Pending',
     savedAt: '2024-03-05T10:11:00Z',
-    source: 'NAC 128'
+    source: 'NAC 128',
+    notes: 'Need to confirm monogram detail.'
   },
   {
     id: 'match-1003',
@@ -266,6 +268,7 @@ export const matchHistory: MatchRecord[] = [
     similarityScore: 0.79,
     status: 'Rejected',
     savedAt: '2024-02-25T12:04:00Z',
-    source: 'Roma Numismatics E-Sale 103'
+    source: 'Roma Numismatics E-Sale 103',
+    notes: 'Reverse legend differs from record.'
   }
 ];
