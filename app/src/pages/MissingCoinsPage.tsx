@@ -1,17 +1,23 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AdjustmentsHorizontalIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { AdjustmentsHorizontalIcon, MagnifyingGlassIcon, ArrowsUpDownIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/outline';
 import { useData } from '../context/DataContext';
 import { formatAuthorityLine, formatCoinTitle, formatIsoDate, formatMeasurements } from '../utils/coinFormatting';
+
+type SortColumn = 'catalog' | 'coin';
 
 export default function MissingCoinsPage() {
   const { museumCoins } = useData();
   const [query, setQuery] = useState('');
   const [mintFilter, setMintFilter] = useState('All Mints');
   const [authorityFilter, setAuthorityFilter] = useState('All Authorities');
+  const [sortConfig, setSortConfig] = useState<{ column: SortColumn; direction: 'asc' | 'desc' }>({
+    column: 'catalog',
+    direction: 'asc'
+  });
 
-  const mints = useMemo(() => ['All Mints', ...new Set(museumCoins.map((coin) => coin.mint))], []);
-  const authorities = useMemo(() => ['All Authorities', ...new Set(museumCoins.map((coin) => coin.authority))], []);
+  const mints = useMemo(() => ['All Mints', ...new Set(museumCoins.map((coin) => coin.mint))], [museumCoins]);
+  const authorities = useMemo(() => ['All Authorities', ...new Set(museumCoins.map((coin) => coin.authority))], [museumCoins]);
 
   const filteredCoins = useMemo(() => {
     return museumCoins.filter((coin) => {
@@ -31,7 +37,30 @@ export default function MissingCoinsPage() {
       const matchesAuthority = authorityFilter === 'All Authorities' || coin.authority === authorityFilter;
       return matchesQuery && matchesMint && matchesAuthority;
     });
-  }, [query, mintFilter, authorityFilter]);
+  }, [authorityFilter, mintFilter, museumCoins, query]);
+
+  const sortedCoins = useMemo(() => {
+    const coins = [...filteredCoins];
+    coins.sort((a, b) => {
+      const directionFactor = sortConfig.direction === 'asc' ? 1 : -1;
+      if (sortConfig.column === 'catalog') {
+        return directionFactor * (a.catalog_number ?? '').localeCompare(b.catalog_number ?? '', undefined, { sensitivity: 'base' });
+      }
+      const titleA = formatCoinTitle(a);
+      const titleB = formatCoinTitle(b);
+      return directionFactor * titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
+    });
+    return coins;
+  }, [filteredCoins, sortConfig]);
+
+  const handleSort = (column: SortColumn) => {
+    setSortConfig((prev) => {
+      if (prev.column === column) {
+        return { column, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      return { column, direction: 'asc' };
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -76,8 +105,18 @@ export default function MissingCoinsPage() {
         <table className="min-w-full divide-y divide-stone-200 text-left text-sm text-stone-700">
           <thead className="bg-parchment/70 text-xs uppercase tracking-wider text-stone-500">
             <tr>
-              <th className="px-5 py-3">Catalog No.</th>
-              <th className="px-5 py-3">Coin</th>
+              <SortableHeader
+                label="Internal Record No."
+                column="catalog"
+                sortConfig={sortConfig}
+                onSort={handleSort}
+              />
+              <SortableHeader
+                label="Coin"
+                column="coin"
+                sortConfig={sortConfig}
+                onSort={handleSort}
+              />
               <th className="px-5 py-3">Authority & Date</th>
               <th className="px-5 py-3">Metal</th>
               <th className="px-5 py-3">Measurements</th>
@@ -86,12 +125,25 @@ export default function MissingCoinsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100 bg-white">
-            {filteredCoins.map((coin) => (
+            {sortedCoins.map((coin) => (
               <tr key={coin.coin_id} className="transition hover:bg-parchment/50">
                 <td className="px-5 py-3 font-medium text-stone-800">{coin.catalog_number}</td>
                 <td className="px-5 py-3">
-                  <p className="font-semibold text-stone-900">{formatCoinTitle(coin)}</p>
-                  <p className="text-xs text-stone-500">{coin.obverse_description}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 overflow-hidden rounded-lg border border-stone-200 bg-stone-100 shadow-inner">
+                      {coin.obverse_image_url ? (
+                        <img src={coin.obverse_image_url} alt={coin.catalog_number ?? coin.coin_id} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-wide text-stone-400">
+                          No image
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-stone-900">{formatCoinTitle(coin)}</p>
+                      <p className="text-xs text-stone-500">{coin.obverse_description}</p>
+                    </div>
+                  </div>
                 </td>
                 <td className="px-5 py-3 text-sm text-stone-600">{formatAuthorityLine(coin)}</td>
                 <td className="px-5 py-3 text-sm text-stone-600">{coin.metal}</td>
@@ -107,7 +159,7 @@ export default function MissingCoinsPage() {
                 </td>
               </tr>
             ))}
-            {filteredCoins.length === 0 ? (
+            {sortedCoins.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-5 py-12 text-center text-sm text-stone-500">
                   No coins matched your filters. Try adjusting the mint or authority selections.
@@ -144,5 +196,32 @@ function FilterSelect({ label, value, options, onChange }: FilterSelectProps) {
         ))}
       </select>
     </label>
+  );
+}
+
+interface SortableHeaderProps {
+  label: string;
+  column: SortColumn;
+  sortConfig: { column: SortColumn; direction: 'asc' | 'desc' };
+  onSort: (column: SortColumn) => void;
+}
+
+function SortableHeader({ label, column, sortConfig, onSort }: SortableHeaderProps) {
+  const isActive = sortConfig.column === column;
+  const Icon = isActive ? (sortConfig.direction === 'asc' ? ArrowUpIcon : ArrowDownIcon) : ArrowsUpDownIcon;
+
+  return (
+    <th className="px-5 py-3">
+      <button
+        type="button"
+        onClick={() => onSort(column)}
+        className={`inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide ${
+          isActive ? 'text-gold-600' : 'text-stone-500'
+        }`}
+      >
+        <span>{label}</span>
+        <Icon className="h-4 w-4" />
+      </button>
+    </th>
   );
 }
