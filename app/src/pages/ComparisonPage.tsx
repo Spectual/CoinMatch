@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { JSX, ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CheckIcon, XMarkIcon, BookmarkIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import {
+  CheckIcon,
+  XMarkIcon,
+  BookmarkIcon,
+  ArrowLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
+} from '@heroicons/react/24/outline';
 import CoinImage from '../components/common/CoinImage';
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
 import { formatCoinTitle, formatAuthorityLine, formatMeasurements, formatAuctionEvent, formatIsoDate } from '../utils/coinFormatting';
-import type { MatchRecord } from '../types';
+import type { CandidateCoin, MatchRecord } from '../types';
 
 export default function ComparisonPage() {
   const { candidateId } = useParams<{ candidateId: string }>();
@@ -16,6 +23,18 @@ export default function ComparisonPage() {
   const candidate = candidateCoins.find((item) => item.id === candidateId) ?? candidateCoins[0];
   const museumCoin = museumCoins.find((coin) => coin.coin_id === candidate.museumCoinId) ?? museumCoins[0];
   const [notes, setNotes] = useState('');
+  const relatedCandidates = useMemo(() => {
+    const pool = candidateCoins
+      .filter((item) => item.museumCoinId === museumCoin.coin_id)
+      .sort((a, b) => b.similarityScore - a.similarityScore);
+    if (pool.some((item) => item.id === candidate.id)) {
+      return pool;
+    }
+    return [candidate, ...pool].filter((item, index, arr) => arr.findIndex((entry) => entry.id === item.id) === index);
+  }, [candidate, candidateCoins, museumCoin.coin_id]);
+  const currentIndex = relatedCandidates.findIndex((item) => item.id === candidate.id);
+  const previousCandidate = currentIndex > 0 ? relatedCandidates[currentIndex - 1] : undefined;
+  const nextCandidate = currentIndex >= 0 && currentIndex < relatedCandidates.length - 1 ? relatedCandidates[currentIndex + 1] : undefined;
 
   const priorDecisions = useMemo(() => matchHistory.filter((record) => record.coinId === museumCoin.coin_id), [matchHistory, museumCoin.coin_id]);
   const existingDecision = useMemo(
@@ -54,6 +73,11 @@ export default function ComparisonPage() {
     }
   };
 
+  const navigateToCandidate = (targetId: string) => {
+    if (targetId === candidate.id) return;
+    navigate(`/comparison/${targetId}`);
+  };
+
   return (
     <div className="space-y-10">
       <button
@@ -65,34 +89,72 @@ export default function ComparisonPage() {
         Back to results
       </button>
 
-      <header className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-stone-400">Side-by-side Review</p>
-          <h1 className="text-4xl font-display text-stone-900">{formatCoinTitle(museumCoin)}</h1>
-          <p className="text-sm text-stone-600">Comparing against {candidate.listingReference}</p>
-          <p className="mt-1 text-xs uppercase tracking-wide text-stone-400">{formatAuthorityLine(museumCoin)}</p>
+      <header className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-stone-400">Side-by-side Review</p>
+            <h1 className="text-4xl font-display text-stone-900">{formatCoinTitle(museumCoin)}</h1>
+            <p className="text-sm text-stone-600">Comparing against {candidate.listingReference}</p>
+            <p className="mt-1 text-xs uppercase tracking-wide text-stone-400">{formatAuthorityLine(museumCoin)}</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <DecisionButton
+              icon={<CheckIcon className="h-5 w-5" />}
+              label="Confirm Match"
+              variant="confirm"
+              active={existingDecision?.status === 'Confirmed'}
+              onClick={() => handleDecision('Confirmed')}
+            />
+            <DecisionButton
+              icon={<BookmarkIcon className="h-5 w-5" />}
+              label="Save for Later"
+              variant="save"
+              active={existingDecision?.status === 'Pending'}
+              onClick={() => handleDecision('Pending')}
+            />
+            <DecisionButton
+              icon={<XMarkIcon className="h-5 w-5" />}
+              label="Reject"
+              variant="reject"
+              active={existingDecision?.status === 'Rejected'}
+              onClick={() => handleDecision('Rejected')}
+            />
+          </div>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <DecisionButton
-            icon={<CheckIcon className="h-5 w-5" />}
-            label="Confirm Match"
-            variant="confirm"
-            active={existingDecision?.status === 'Confirmed'}
-            onClick={() => handleDecision('Confirmed')}
-          />
-          <DecisionButton
-            icon={<BookmarkIcon className="h-5 w-5" />}
-            label="Save for Later"
-            variant="save"
-            active={existingDecision?.status === 'Pending'}
-            onClick={() => handleDecision('Pending')}
-          />
-          <DecisionButton
-            icon={<XMarkIcon className="h-5 w-5" />}
-            label="Reject"
-            variant="reject"
-            active={existingDecision?.status === 'Rejected'}
-            onClick={() => handleDecision('Rejected')}
+        <div className="flex flex-col gap-3 rounded-2xl border border-stone-200 bg-white/80 p-4 shadow-card">
+          <div className="flex items-center justify-between text-xs uppercase tracking-widest text-stone-400">
+            <button
+              type="button"
+              className={`inline-flex items-center gap-2 rounded-md border px-3 py-1 text-xs font-semibold transition ${
+                previousCandidate
+                  ? 'border-stone-200 text-stone-500 hover:border-gold-300 hover:text-gold-500'
+                  : 'cursor-not-allowed border-stone-100 text-stone-300'
+              }`}
+              onClick={() => previousCandidate && navigateToCandidate(previousCandidate.id)}
+              disabled={!previousCandidate}
+            >
+              <ChevronLeftIcon className="h-4 w-4" /> Prev candidate
+            </button>
+            <span>
+              Candidate {currentIndex + 1} of {relatedCandidates.length}
+            </span>
+            <button
+              type="button"
+              className={`inline-flex items-center gap-2 rounded-md border px-3 py-1 text-xs font-semibold transition ${
+                nextCandidate
+                  ? 'border-stone-200 text-stone-500 hover:border-gold-300 hover:text-gold-500'
+                  : 'cursor-not-allowed border-stone-100 text-stone-300'
+              }`}
+              onClick={() => nextCandidate && navigateToCandidate(nextCandidate.id)}
+              disabled={!nextCandidate}
+            >
+              Next candidate <ChevronRightIcon className="h-4 w-4" />
+            </button>
+          </div>
+          <CandidateFilmstrip
+            candidates={relatedCandidates}
+            activeId={candidate.id}
+            onSelect={navigateToCandidate}
           />
         </div>
       </header>
@@ -255,4 +317,51 @@ function statusBadgeClass(status: string) {
   if (status === 'Confirmed') return 'bg-gold-500/10 text-gold-600 border border-gold-300';
   if (status === 'Rejected') return 'bg-rose-100 text-rose-500 border border-rose-200';
   return 'bg-amber-50 text-amber-600 border border-amber-200';
+}
+
+interface CandidateFilmstripProps {
+  candidates: CandidateCoin[];
+  activeId: string;
+  onSelect: (candidateId: string) => void;
+}
+
+function CandidateFilmstrip({ candidates, activeId, onSelect }: CandidateFilmstripProps) {
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)]">
+      <div className="flex gap-3 overflow-x-auto pb-1">
+        {candidates.map((item) => {
+          const isActive = item.id === activeId;
+          return (
+            <button
+              type="button"
+              key={item.id}
+              onClick={() => onSelect(item.id)}
+              className={`group flex w-40 shrink-0 flex-col gap-2 rounded-xl border p-2 text-left transition ${
+                isActive
+                  ? 'border-gold-400 bg-gold-500/10 shadow-card'
+                  : 'border-stone-200 bg-white/80 hover:border-gold-300'
+              }`}
+            >
+              <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-stone-400">
+                <span>{(item.similarityScore * 100).toFixed(0)}%</span>
+                <span className="truncate text-stone-500">{formatIsoDate(item.saleDate)}</span>
+              </div>
+              <div className="relative h-24 overflow-hidden rounded-lg border border-stone-200 bg-stone-100">
+                {item.metadata.obverse_image_url ? (
+                  <img
+                    src={item.metadata.obverse_image_url}
+                    alt={item.listingReference}
+                    className="h-full w-full object-cover transition group-hover:scale-[1.03]"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs text-stone-400">No image</div>
+                )}
+              </div>
+              <p className="text-xs font-semibold text-stone-700 line-clamp-2">{item.listingReference}</p>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
