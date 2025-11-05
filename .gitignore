@@ -17,7 +17,7 @@ app/.env.*
 
 # Backend Python
 backend/.venv/
-backend/__pycache__/
+**/__pycache__/
 backend/.mypy_cache/
 backend/.pytest_cache/
 backend/.env
