@@ -18,10 +18,18 @@ import type { CandidateCoin, MatchRecord } from '../types';
 export default function ComparisonPage() {
   const { candidateId } = useParams<{ candidateId: string }>();
   const navigate = useNavigate();
-  const { candidateCoins, museumCoins, matchHistory, logMatchDecision } = useData();
+  const { candidateCoins, museumCoins, matchHistory, logMatchDecision, loading } = useData();
   const { pushToast } = useToast();
-  const candidate = candidateCoins.find((item) => item.id === candidateId) ?? candidateCoins[0];
-  const museumCoin = museumCoins.find((coin) => coin.coin_id === candidate.museumCoinId) ?? museumCoins[0];
+  const candidate = candidateCoins.find((item) => item.id === candidateId) ?? null;
+  const museumCoin = candidate ? museumCoins.find((coin) => coin.coin_id === candidate.museumCoinId) ?? museumCoins[0] ?? null : null;
+
+  if (!candidate || !museumCoin) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-sm text-stone-500">
+        {loading ? 'Loading comparison data…' : 'Comparison data is unavailable.'}
+      </div>
+    );
+  }
   const [notes, setNotes] = useState('');
   const relatedCandidates = useMemo(() => {
     const pool = candidateCoins
@@ -49,9 +57,9 @@ export default function ComparisonPage() {
     setNotes(existingDecision?.notes ?? '');
   }, [existingDecision]);
 
-  const handleDecision = (status: MatchRecord['status']) => {
+  const handleDecision = async (status: MatchRecord['status']) => {
     try {
-      const record = logMatchDecision({
+      const record = await logMatchDecision({
         museumCoinId: museumCoin.coin_id,
         candidateId: candidate.id,
         status,

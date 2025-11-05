@@ -15,7 +15,7 @@ export default function SearchResultsPage() {
   const [params] = useSearchParams();
   const mode = params.get('mode') === 'text' ? 'text' : 'image';
   const navigate = useNavigate();
-  const { candidateCoins, museumCoins } = useData();
+  const { candidateCoins, museumCoins, loading } = useData();
   const DEFAULT_MIN_SCORE = 0.7;
   const [sort, setSort] = useState<'score' | 'date'>('score');
   const [minScore, setMinScore] = useState(DEFAULT_MIN_SCORE);
@@ -34,6 +34,27 @@ export default function SearchResultsPage() {
     });
   }, [filteredCandidates, sort]);
   const topSimilarity = sortedCandidates.length ? (sortedCandidates[0].similarityScore * 100).toFixed(0) : '0';
+
+  if (loading && candidateCoins.length === 0) {
+    return (
+      <div className="space-y-8">
+        <header className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-stone-400">{mode === 'image' ? 'Image Retrieval' : 'Text Retrieval'}</p>
+            <h1 className="text-3xl font-display text-stone-900">Candidate Match Results</h1>
+            <p className="text-sm text-stone-600">
+              {mode === 'image'
+                ? 'Side-by-side comparison based on obverse & reverse similarity.'
+                : 'Results ranked by description, inscriptions, and catalog references.'}
+            </p>
+          </div>
+        </header>
+        <div className="flex min-h-[40vh] items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-white/70 text-sm text-stone-500">
+          Fetching candidates…
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

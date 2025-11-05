@@ -9,6 +9,12 @@ npm install
 npm run dev
 ```
 
+- Create a `.env.local` file (or export an environment variable) to point the frontend at the FastAPI service:
+
+```
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
 - `npm run build` – Type-checks and bundles the production build.
 - `npm run preview` – Serves the Vite production bundle locally.
 

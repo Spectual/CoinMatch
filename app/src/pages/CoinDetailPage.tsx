@@ -23,9 +23,17 @@ import {
 export default function CoinDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { museumCoins, candidateCoins, matchHistory } = useData();
+  const { museumCoins, candidateCoins, matchHistory, loading } = useData();
   const { pushToast } = useToast();
-  const coin = museumCoins.find((entry) => entry.coin_id === id) ?? museumCoins[0];
+  const coin = museumCoins.find((entry) => entry.coin_id === id) ?? null;
+
+  if (!coin) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-sm text-stone-500">
+        {loading ? 'Loading coin details…' : 'No coin data available.'}
+      </div>
+    );
+  }
 
   const relatedMatches = useMemo(
     () => matchHistory.filter((record) => record.coinId === coin.coin_id),

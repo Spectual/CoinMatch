@@ -33,15 +33,16 @@ export default function LoginPage() {
     }
 
     setSubmitting(true);
-    window.setTimeout(() => {
-      login({
-        name: 'Dr. Laure Marest',
-        email
+    login({ email, password })
+      .then(() => {
+        setSubmitting(false);
+        setSuccess('Welcome back to CoinMatch.');
+        navigate('/dashboard', { replace: true });
+      })
+      .catch((error: Error) => {
+        setSubmitting(false);
+        setError(error.message || 'Unable to sign in.');
       });
-      setSubmitting(false);
-      setSuccess('Welcome back, Dr. Laure Marest.');
-      navigate('/dashboard', { replace: true });
-    }, 600);
   };
 
   return (

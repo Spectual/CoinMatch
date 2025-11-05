@@ -6,7 +6,7 @@ import { formatIsoDate, formatCoinTitle } from '../utils/coinFormatting';
 const statusFilters = ['All statuses', 'Confirmed', 'Pending', 'Rejected'] as const;
 
 export default function MatchHistoryPage() {
-  const { matchHistory, museumCoins, candidateCoins } = useData();
+  const { matchHistory, museumCoins, candidateCoins, loading } = useData();
   const [status, setStatus] = useState<(typeof statusFilters)[number]>('All statuses');
   const [search, setSearch] = useState('');
 
@@ -20,6 +20,14 @@ export default function MatchHistoryPage() {
       return matchesStatus && matchesQuery;
     });
   }, [status, search]);
+
+  if (loading && matchHistory.length === 0) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-sm text-stone-500">
+        Loading match history…
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

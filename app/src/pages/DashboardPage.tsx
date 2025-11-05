@@ -5,11 +5,19 @@ import { useData } from '../context/DataContext';
 import { formatCoinTitle, formatIsoDate } from '../utils/coinFormatting';
 
 export default function DashboardPage() {
-  const { museumCoins, candidateCoins, matchHistory } = useData();
+  const { museumCoins, candidateCoins, matchHistory, loading } = useData();
   const pendingReviews = matchHistory.filter((m) => m.status === 'Pending');
   const confirmedMatches = matchHistory.filter((m) => m.status === 'Confirmed');
   const topCandidates = [...candidateCoins].sort((a, b) => b.similarityScore - a.similarityScore).slice(0, 3);
   const latestHistory = [...matchHistory].sort((a, b) => (a.savedAt < b.savedAt ? 1 : -1)).slice(0, 5);
+
+  if (loading && museumCoins.length === 0) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center text-sm text-stone-500">
+        Loading dashboard…
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">
