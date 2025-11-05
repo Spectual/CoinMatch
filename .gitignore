@@ -11,6 +11,20 @@ app/*.tsbuildinfo
 app/vite.config.js
 app/vite.config.d.ts
 
+# Frontend env files
+app/.env
+app/.env.*
+
+# Backend Python
+backend/.venv/
+backend/__pycache__/
+backend/.mypy_cache/
+backend/.pytest_cache/
+backend/.env
+backend/.env.*
+backend/*.db
+backend/*.sqlite*
+
 # Logs
 *.log
 npm-debug.log*
