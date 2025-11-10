@@ -29,7 +29,8 @@ def serialize_candidate(candidate) -> dict:
         "estimate_value": candidate.estimate_value,
         "sale_price": candidate.sale_price,
         "listing_url": candidate.listing_url,
-        "metadata": metadata
+        "metadata": metadata,
+        "sourceName": candidate.source_name,
     }
 
 

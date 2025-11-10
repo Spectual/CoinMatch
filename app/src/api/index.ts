@@ -36,6 +36,7 @@ interface SearchCandidateResponse {
   sale_price?: string;
   listing_url?: string;
   metadata?: Record<string, unknown>;
+  sourceName?: string;
 }
 
 export interface MatchRecordResponse {
@@ -77,6 +78,12 @@ export async function fetchMuseumCoins(token: string) {
   });
 }
 
+export async function fetchOnlineCoins(token: string) {
+  return apiRequest<Array<Record<string, unknown>>>('/api/online-coins', {
+    token
+  });
+}
+
 export async function fetchMatchHistory(token: string) {
   return apiRequest<MatchHistoryResponse>('/api/match/history', {
     token
@@ -105,6 +112,36 @@ export async function saveMatchDecision(
   return apiRequest<MatchRecordResponse>('/api/match/save', {
     method: 'POST',
     body,
+    token
+  });
+}
+
+export async function syncSources(token: string) {
+  return apiRequest<{ museum_updated: number; online_updated: number }>('/api/admin/sync', {
+    method: 'POST',
+    token
+  });
+}
+
+export async function runMatching(token: string) {
+  return apiRequest<{ matches_updated: number }>('/api/admin/match', {
+    method: 'POST',
+    token
+  });
+}
+
+export async function uploadMuseumCoins(token: string, payload: unknown) {
+  return apiRequest<{ items: unknown[]; count: number }>('/api/museum-coins', {
+    method: 'POST',
+    body: payload,
+    token
+  });
+}
+
+export async function uploadOnlineCoins(token: string, payload: unknown) {
+  return apiRequest<{ items: unknown[]; count: number }>('/api/online-coins', {
+    method: 'POST',
+    body: payload,
     token
   });
 }

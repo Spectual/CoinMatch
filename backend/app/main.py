@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import auth, coins, matches, search
+from app.api.routes import admin, auth, coins, matches, search
 from app.config import get_settings
 from app.db.base import Base
 from app.db.session import engine
@@ -25,6 +25,7 @@ app.include_router(auth.router)
 app.include_router(coins.router)
 app.include_router(search.router)
 app.include_router(matches.router)
+app.include_router(admin.router)
 
 
 @app.get("/health")

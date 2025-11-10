@@ -7,9 +7,10 @@ import { formatCoinTitle, formatIsoDate } from '../utils/coinFormatting';
 export default function DashboardPage() {
   const { museumCoins, candidateCoins, matchHistory, loading } = useData();
   const pendingReviews = matchHistory.filter((m) => m.status === 'Pending');
-  const confirmedMatches = matchHistory.filter((m) => m.status === 'Confirmed');
+  const confirmedMatches = matchHistory.filter((m) => m.status === 'Accepted');
   const topCandidates = [...candidateCoins].sort((a, b) => b.similarityScore - a.similarityScore).slice(0, 3);
   const latestHistory = [...matchHistory].sort((a, b) => (a.savedAt < b.savedAt ? 1 : -1)).slice(0, 5);
+  const totalOnline = candidateCoins.length;
 
   if (loading && museumCoins.length === 0) {
     return (
@@ -49,6 +50,12 @@ export default function DashboardPage() {
           icon={<SparklesIcon className="h-10 w-10" />}
         />
         <SummaryCard
+          title="Online Listings"
+          value={totalOnline.toString()}
+          description="Latest scraped or uploaded online coin records."
+          icon={<RectangleStackIcon className="h-10 w-10" />}
+        />
+        <SummaryCard
           title="Top Similarity"
           value={`${Math.round((topCandidates[0]?.similarityScore ?? 0) * 100)}%`}
           description={
@@ -73,6 +80,7 @@ export default function DashboardPage() {
             <ActionCard title="Run Image Search" description="Upload obverse & reverse scans" to="/search?mode=image" />
             <ActionCard title="Run Text Query" description="Search by catalog number or inscription" to="/search?mode=text" />
             <ActionCard title="Review History" description="Validate saved or pending match decisions" to="/history" />
+            <ActionCard title="Sync Datasets" description="Fetch cloud data or upload records" to="/admin/tools" />
           </div>
         </article>
 
@@ -151,7 +159,7 @@ export default function DashboardPage() {
 }
 
 function statusBadgeClass(status: string) {
-  if (status === 'Confirmed') return 'bg-gold-500/10 text-gold-600 border border-gold-300';
+  if (status === 'Accepted') return 'bg-gold-500/10 text-gold-600 border border-gold-300';
   if (status === 'Rejected') return 'bg-rose-100 text-rose-500 border border-rose-200';
   return 'bg-amber-50 text-amber-600 border border-amber-200';
 }

@@ -3,7 +3,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.models import CandidateListing, MatchRecord, MuseumCoin
+from app.models import MatchRecord, MuseumCoin, OnlineCoin
 
 
 def log_match_decision(
@@ -20,7 +20,7 @@ def log_match_decision(
 
     candidate = None
     if candidate_id:
-        candidate = db.query(CandidateListing).filter(CandidateListing.id == candidate_id).first()
+        candidate = db.query(OnlineCoin).filter(OnlineCoin.id == candidate_id).first()
         if not candidate:
             raise ValueError("Candidate listing not found")
 
@@ -33,7 +33,19 @@ def log_match_decision(
         .first()
     )
 
-    status_value = decision.capitalize()
+    normalized = (decision or "").strip().lower()
+    status_lookup = {
+        "accept": "Accepted",
+        "accepted": "Accepted",
+        "approve": "Accepted",
+        "reject": "Rejected",
+        "rejected": "Rejected",
+        "pending": "Pending",
+        "save": "Pending",
+        "save for later": "Pending",
+        "hold": "Pending",
+    }
+    status_value = status_lookup.get(normalized, "Pending")
 
     if record:
         record.status = status_value

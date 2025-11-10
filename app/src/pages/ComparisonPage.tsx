@@ -66,7 +66,7 @@ export default function ComparisonPage() {
         notes: notes.trim() ? notes : undefined
       });
       const statusLabel =
-        status === 'Confirmed' ? 'Match confirmed' : status === 'Rejected' ? 'Match rejected' : 'Saved for later review';
+        status === 'Accepted' ? 'Match accepted' : status === 'Rejected' ? 'Match rejected' : 'Saved for later review';
       pushToast({
         variant: 'success',
         title: statusLabel,
@@ -110,8 +110,8 @@ export default function ComparisonPage() {
               icon={<CheckIcon className="h-5 w-5" />}
               label="Confirm Match"
               variant="confirm"
-              active={existingDecision?.status === 'Confirmed'}
-              onClick={() => handleDecision('Confirmed')}
+              active={existingDecision?.status === 'Accepted'}
+              onClick={() => handleDecision('Accepted')}
             />
             <DecisionButton
               icon={<BookmarkIcon className="h-5 w-5" />}
@@ -322,7 +322,7 @@ function DecisionButton({ icon, label, variant, active = false, onClick }: Decis
 }
 
 function statusBadgeClass(status: string) {
-  if (status === 'Confirmed') return 'bg-gold-500/10 text-gold-600 border border-gold-300';
+  if (status === 'Accepted') return 'bg-gold-500/10 text-gold-600 border border-gold-300';
   if (status === 'Rejected') return 'bg-rose-100 text-rose-500 border border-rose-200';
   return 'bg-amber-50 text-amber-600 border border-amber-200';
 }

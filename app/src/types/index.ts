@@ -49,6 +49,7 @@ export interface CandidateCoin {
   sale_price?: string;
   metadata: CoinMetadata;
   listing_url?: string;
+  sourceName?: string;
 }
 
 export interface MatchRecord {
@@ -58,7 +59,7 @@ export interface MatchRecord {
   candidateTitle: string;
   candidateId?: string;
   similarityScore: number;
-  status: 'Confirmed' | 'Rejected' | 'Pending';
+  status: 'Accepted' | 'Rejected' | 'Pending';
   savedAt: string;
   source: string;
   notes?: string;

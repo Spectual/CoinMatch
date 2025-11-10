@@ -18,7 +18,8 @@ const navItems: NavItem[] = [
   { name: 'Dashboard', to: '/dashboard', icon: <HomeIcon className="h-5 w-5" /> },
   { name: 'Missing Coins', to: '/missing-coins', icon: <RectangleStackIcon className="h-5 w-5" /> },
   { name: 'Search', to: '/search', icon: <MagnifyingGlassIcon className="h-5 w-5" /> },
-  { name: 'History', to: '/history', icon: <ClockIcon className="h-5 w-5" /> }
+  { name: 'History', to: '/history', icon: <ClockIcon className="h-5 w-5" /> },
+  { name: 'Admin', to: '/admin/tools', icon: <RectangleStackIcon className="h-5 w-5" /> }
 ];
 
 export default function Sidebar() {

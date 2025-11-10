@@ -242,7 +242,7 @@ export const matchHistory: MatchRecord[] = [
     candidateTitle: 'CNG Triton XXVII · Lot 112',
     candidateId: 'cand-901',
     similarityScore: 0.87,
-    status: 'Confirmed',
+    status: 'Accepted',
     savedAt: '2024-03-12T15:45:00Z',
     source: 'CNG Triton XXVII',
     notes: 'Reverse die matches Dewing plate.'

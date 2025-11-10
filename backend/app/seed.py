@@ -2,7 +2,7 @@ import json
 
 from app.db.base import Base
 from app.db.session import engine, session_scope
-from app.models import CandidateListing, MatchRecord, MuseumCoin, User
+from app.models import MatchRecord, MuseumCoin, OnlineCoin, User
 from app.services.auth import hash_password
 
 
@@ -193,9 +193,9 @@ def seed_candidates():
 
     with session_scope() as session:
         for candidate_data in candidates:
-            if session.query(CandidateListing).filter(CandidateListing.id == candidate_data["id"]).first():
+            if session.query(OnlineCoin).filter(OnlineCoin.id == candidate_data["id"]).first():
                 continue
-            session.add(CandidateListing(**candidate_data))
+            session.add(OnlineCoin(**candidate_data))
 
 
 def seed_matches():
@@ -207,7 +207,7 @@ def seed_matches():
                 museum_coin_id="coin-4224",
                 candidate_id="cand-901",
                 similarity_score=0.87,
-                status="Confirmed",
+                status="Accepted",
                 notes="Reverse die matches Dewing plate.",
                 source="CNG Triton XXVII"
             ),

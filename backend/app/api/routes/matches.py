@@ -23,7 +23,7 @@ def serialize_match(record: MatchRecordModel) -> dict:
         "notes": record.notes,
         "source": record.source,
         "museumCoinTitle": record.museum_coin.catalog_number if record.museum_coin else None,
-        "candidateTitle": record.candidate.listing_reference if record.candidate else None
+        "candidateTitle": record.online_coin.listing_reference if record.online_coin else None
     }
 
 

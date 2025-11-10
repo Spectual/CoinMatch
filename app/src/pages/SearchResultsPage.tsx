@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AdjustmentsHorizontalIcon, ArrowPathIcon, PhotoIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import CoinImage from '../components/common/CoinImage';
@@ -15,15 +15,30 @@ export default function SearchResultsPage() {
   const [params] = useSearchParams();
   const mode = params.get('mode') === 'text' ? 'text' : 'image';
   const navigate = useNavigate();
-  const { candidateCoins, museumCoins, loading } = useData();
+  const { candidateCoins, museumCoins, matchHistory, loading, searchCandidates } = useData();
   const DEFAULT_MIN_SCORE = 0.7;
   const [sort, setSort] = useState<'score' | 'date'>('score');
   const [minScore, setMinScore] = useState(DEFAULT_MIN_SCORE);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [query, setQuery] = useState('');
+  const [displayCandidates, setDisplayCandidates] = useState<CandidateCoin[]>(candidateCoins);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    setDisplayCandidates(candidateCoins);
+  }, [candidateCoins]);
+
+  const acceptedIds = useMemo(() => {
+    return new Set(
+      matchHistory.filter((record) => record.status === 'Accepted' && record.candidateId).map((record) => record.candidateId as string)
+    );
+  }, [matchHistory]);
 
   const filteredCandidates = useMemo(() => {
-    return candidateCoins.filter((candidate) => candidate.similarityScore >= minScore);
-  }, [minScore]);
+    return displayCandidates
+      .filter((candidate) => candidate.similarityScore >= minScore)
+      .filter((candidate) => !acceptedIds.has(candidate.id));
+  }, [displayCandidates, minScore, acceptedIds]);
 
   const sortedCandidates = useMemo(() => {
     return [...filteredCandidates].sort((a, b) => {
@@ -89,18 +104,44 @@ export default function SearchResultsPage() {
       </header>
 
       <section className="rounded-2xl border border-dashed border-gold-300 bg-white/70 p-6 shadow-card">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
+        <form
+          className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
+          onSubmit={(event: FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            if (!query.trim()) {
+              return;
+            }
+            setSearching(true);
+            searchCandidates(query)
+              .then((results) => setDisplayCandidates(results))
+              .catch((error) =>
+                window.alert(error instanceof Error ? error.message : 'Search failed')
+              )
+              .finally(() => setSearching(false));
+          }}
+        >
+          <div className="flex-1">
             <h2 className="text-xl font-display text-stone-900">New {mode === 'image' ? 'image' : 'text'} query</h2>
-            <p className="text-sm text-stone-500">Upload museum photography or provide descriptive keywords to re-run the search.</p>
+            <p className="text-sm text-stone-500">
+              Provide descriptive keywords to retrieve additional online candidates. Results hide
+              already accepted matches automatically.
+            </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-1 flex-wrap items-center gap-3">
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="e.g. Tarentum AR didrachm dolphin"
+              className="flex-1 rounded-md border border-stone-200 bg-white/80 px-3 py-2 text-sm text-stone-700 focus:border-gold-300 focus:outline-none focus:ring-2 focus:ring-gold-200"
+            />
             <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-md border border-gold-300 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-gold-500 transition hover:border-gold-400 hover:text-gold-400"
+              type="submit"
+              className="inline-flex items-center gap-2 rounded-md border border-gold-300 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-gold-500 transition hover:border-gold-400 hover:text-gold-400 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={searching}
             >
-              {mode === 'image' ? <PhotoIcon className="h-5 w-5" /> : <DocumentTextIcon className="h-5 w-5" />}
-              {mode === 'image' ? 'Upload obverse & reverse' : 'Enter new query'}
+              {searching ? 'Searching…' : <DocumentTextIcon className="h-5 w-5" />}
+              {searching ? '' : 'Run search'}
             </button>
             <button
               type="button"
@@ -109,13 +150,15 @@ export default function SearchResultsPage() {
                 setSort('score');
                 setMinScore(DEFAULT_MIN_SCORE);
                 setViewMode('grid');
+                setDisplayCandidates(candidateCoins);
+                setQuery('');
               }}
             >
               <ArrowPathIcon className="h-5 w-5" />
-              Clear filters
+              Reset list
             </button>
           </div>
-        </div>
+        </form>
       </section>
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -233,6 +276,11 @@ function CandidateCard({ candidate, museumCoinId, onCompare, onViewMuseum }: Can
         <p className="text-xs uppercase tracking-[0.2em] text-stone-400">{candidate.listingReference}</p>
         <h2 className="mt-1 text-lg font-display text-stone-900">{formatCoinTitle(candidate.metadata)}</h2>
         <p className="text-xs text-stone-500">{formatAuthorityLine(candidate.metadata)}</p>
+        {candidate.sourceName ? (
+          <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-stone-400">
+            Source · {candidate.sourceName}
+          </p>
+        ) : null}
       </div>
       <div className="flex flex-1 flex-col gap-6 px-6 py-5">
         <div className="grid grid-cols-2 gap-4">
@@ -290,6 +338,7 @@ function CandidateRow({ candidate, museumCoinId, onCompare, onViewMuseum }: Cand
           <span>Similarity {Math.round(candidate.similarityScore * 100)}%</span>
           <span>Estimate {candidate.estimate_value ?? '—'}</span>
           <span>Sale {formatIsoDate(candidate.saleDate)}</span>
+          {candidate.sourceName ? <span>Source {candidate.sourceName}</span> : null}
         </div>
       </div>
       <div className="flex flex-col items-stretch gap-3 md:w-64">

@@ -15,6 +15,8 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://localhost:5173"
     ]
+    museum_source_url: str | None = None
+    online_source_url: str | None = None
 
     model_config = SettingsConfigDict(
         env_prefix="coinmatch_",

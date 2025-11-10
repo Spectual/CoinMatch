@@ -64,6 +64,7 @@ class CandidateListing(BaseModel):
     estimate_value: Optional[str] = None
     sale_price: Optional[str] = None
     listing_url: Optional[str] = None
+    sourceName: Optional[str] = Field(None, alias="source_name")
 
     class Config:
         populate_by_name = True

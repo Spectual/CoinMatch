@@ -25,6 +25,7 @@ uvicorn app.main:app --reload
 - `app/services/` – domain logic (auth, catalog queries, match persistence, placeholder search)
 - `app/seed.py` – loads curator login, museum records, auction candidates, match history
 - `requirements.txt` – Python dependencies (FastAPI, SQLAlchemy, Alembic, etc.)
+- `DATA_MODEL.md` – overview of tables and data flow
 
 ### Default Accounts
 
@@ -38,6 +39,8 @@ uvicorn app.main:app --reload
 | `COINMATCH_DATABASE_URL` | SQLAlchemy connection string | `sqlite:///./coinmatch.db` |
 | `COINMATCH_SECRET_KEY` | Token signing secret | `change-this-key` |
 | `COINMATCH_CORS_ORIGINS` | Comma-separated origins allowed for CORS | `http://127.0.0.1:5173,http://localhost:5173` |
+| `COINMATCH_MUSEUM_SOURCE_URL` | Optional HTTP(S) endpoint returning museum coin JSON | empty |
+| `COINMATCH_ONLINE_SOURCE_URL` | Optional HTTP(S) endpoint returning online coin JSON | empty |
 
 ### Deployment Notes
 
@@ -54,6 +57,9 @@ alembic upgrade head
 # Drop & reseed dev database
 rm -f coinmatch.db
 python -m app.seed
+
+# Pull remote coin datasets into the database
+python -m app.ingest
 ```
 
 See `docs/API_SPEC.md` for the contract consumed by the React frontend.

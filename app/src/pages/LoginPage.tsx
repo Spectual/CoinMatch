@@ -35,9 +35,9 @@ export default function LoginPage() {
     setSubmitting(true);
     login({ email, password })
       .then(() => {
-        setSubmitting(false);
+      setSubmitting(false);
         setSuccess('Welcome back to CoinMatch.');
-        navigate('/dashboard', { replace: true });
+      navigate('/dashboard', { replace: true });
       })
       .catch((error: Error) => {
         setSubmitting(false);

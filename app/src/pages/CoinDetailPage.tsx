@@ -35,15 +35,29 @@ export default function CoinDetailPage() {
     );
   }
 
+  const acceptedIds = useMemo(
+    () =>
+      new Set(
+        matchHistory
+          .filter((record) => record.status === 'Accepted' && record.candidateId)
+          .map((record) => record.candidateId as string)
+      ),
+    [matchHistory]
+  );
   const relatedMatches = useMemo(
     () => matchHistory.filter((record) => record.coinId === coin.coin_id),
     [coin.coin_id, matchHistory]
   );
   const suggestedCandidates = useMemo(() => {
-    const related = candidateCoins.filter((candidate) => candidate.museumCoinId === coin.coin_id);
+    const related = candidateCoins
+      .filter((candidate) => candidate.museumCoinId === coin.coin_id)
+      .filter((candidate) => !acceptedIds.has(candidate.id));
     if (related.length > 0) return related;
-    return [...candidateCoins].sort((a, b) => b.similarityScore - a.similarityScore).slice(0, 3);
-  }, [candidateCoins, coin.coin_id]);
+    return [...candidateCoins]
+      .filter((candidate) => !acceptedIds.has(candidate.id))
+      .sort((a, b) => b.similarityScore - a.similarityScore)
+      .slice(0, 3);
+  }, [candidateCoins, coin.coin_id, acceptedIds]);
   const referenceList = coin.reference_list ? coin.reference_list.split(';').map((item) => item.trim()).filter(Boolean) : [];
 
   return (
@@ -300,7 +314,7 @@ function MetadataBlock({ title, value }: { title: string; value: string }) {
 }
 
 function statusBadgeClass(status: string) {
-  if (status === 'Confirmed') return 'bg-gold-500/10 text-gold-600 border border-gold-300';
+  if (status === 'Accepted') return 'bg-gold-500/10 text-gold-600 border border-gold-300';
   if (status === 'Rejected') return 'bg-rose-100 text-rose-500 border border-rose-200';
   return 'bg-amber-50 text-amber-600 border border-amber-200';
 }

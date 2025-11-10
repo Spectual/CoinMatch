@@ -10,6 +10,7 @@ const CoinDetailPage = lazy(() => import('./pages/CoinDetailPage'));
 const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage'));
 const ComparisonPage = lazy(() => import('./pages/ComparisonPage'));
 const MatchHistoryPage = lazy(() => import('./pages/MatchHistoryPage'));
+const AdminToolsPage = lazy(() => import('./pages/AdminToolsPage'));
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="search" element={<SearchResultsPage />} />
           <Route path="comparison/:candidateId" element={<ComparisonPage />} />
           <Route path="history" element={<MatchHistoryPage />} />
+          <Route path="admin/tools" element={<AdminToolsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

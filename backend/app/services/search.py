@@ -4,7 +4,7 @@ from typing import Optional, Sequence
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models import CandidateListing, MuseumCoin, SearchJob
+from app.models import OnlineCoin, MuseumCoin, SearchJob
 
 
 def run_search(
@@ -14,7 +14,7 @@ def run_search(
     query_text: Optional[str],
     min_score: float = 0.0,
     user_id: Optional[int] = None
-) -> tuple[SearchJob, Sequence[CandidateListing]]:
+) -> tuple[SearchJob, Sequence[OnlineCoin]]:
     job = SearchJob(
         job_type=job_type,
         museum_coin_id=museum_coin_id,
@@ -28,21 +28,26 @@ def run_search(
     db.add(job)
     db.flush()
 
-    query = db.query(CandidateListing)
+    query = db.query(OnlineCoin)
     if museum_coin_id:
-        query = query.filter(CandidateListing.museum_coin_id == museum_coin_id)
+        query = query.filter(OnlineCoin.museum_coin_id == museum_coin_id)
     if query_text:
         like = f"%{query_text}%"
         query = query.filter(
-            func.lower(CandidateListing.metadata_json).like(func.lower(like))
-            | CandidateListing.listing_reference.ilike(like)
+            func.lower(OnlineCoin.metadata_json).like(func.lower(like))
+            | OnlineCoin.listing_reference.ilike(like)
         )
-    results = query.filter(CandidateListing.similarity_score >= min_score).order_by(CandidateListing.similarity_score.desc()).limit(20).all()
+    results = (
+        query.filter(OnlineCoin.similarity_score >= min_score)
+        .order_by(OnlineCoin.similarity_score.desc())
+        .limit(20)
+        .all()
+    )
 
     return job, results
 
 
-def ensure_candidate_links(db: Session, candidates: Sequence[CandidateListing]) -> None:
+def ensure_candidate_links(db: Session, candidates: Sequence[OnlineCoin]) -> None:
     for candidate in candidates:
         if candidate.museum_coin_id:
             continue

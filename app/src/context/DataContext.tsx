@@ -1,6 +1,17 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { fetchCandidates, fetchMatchHistory, fetchMuseumCoins, saveMatchDecision, type MatchRecordResponse } from '../api';
+import {
+  fetchCandidates,
+  fetchMatchHistory,
+  fetchMuseumCoins,
+  fetchOnlineCoins,
+  runMatching,
+  saveMatchDecision,
+  syncSources,
+  type MatchRecordResponse,
+  uploadMuseumCoins,
+  uploadOnlineCoins
+} from '../api';
 import { useAuth } from './AuthContext';
 import type { CandidateCoin, CoinMetadata, MatchRecord, AuctionEvent } from '../types';
 
@@ -18,6 +29,11 @@ interface DataContextValue {
   loading: boolean;
   refreshData: () => Promise<void>;
   logMatchDecision: (payload: MatchDecisionPayload) => Promise<MatchRecord>;
+  searchCandidates: (query: string) => Promise<CandidateCoin[]>;
+  syncRemoteSources: () => Promise<{ museum_updated: number; online_updated: number }>;
+  runMatchingJob: () => Promise<{ matches_updated: number }>;
+  uploadMuseumDataset: (payload: unknown) => Promise<number>;
+  uploadOnlineDataset: (payload: unknown) => Promise<number>;
 }
 
 const DataContext = createContext<DataContextValue | undefined>(undefined);
@@ -59,7 +75,7 @@ function normalizeCoin(coin: any): CoinMetadata {
     lot_description_EN: coin.lot_description_EN ?? coin.lotDescriptionEn,
     created_at: coin.created_at ?? coin.createdAt ?? new Date().toISOString(),
     updated_at: coin.updated_at ?? coin.updatedAt ?? new Date().toISOString(),
-    source_type: coin.source_type ?? coin.sourceType ?? 'museum'
+    source_type: coin.source_type ?? coin.sourceType ?? 'museum',
   } as CoinMetadata;
 }
 
@@ -82,12 +98,13 @@ function normalizeCandidate(candidate: any): CandidateCoin {
     estimate_value: candidate.estimate_value ?? metadata.estimate_value,
     sale_price: candidate.sale_price ?? metadata.sale_price,
     metadata,
-    listing_url: candidate.listing_url ?? metadata.obverse_image_url
+    listing_url: candidate.listing_url ?? metadata.obverse_image_url,
+    sourceName: candidate.sourceName ?? candidate.source_name
   };
 }
 
 function normalizeMatch(record: MatchRecordResponse, coins: CoinMetadata[], candidates: CandidateCoin[]): MatchRecord {
-  const status = (['Confirmed', 'Rejected', 'Pending'] as const).includes(record.status as any)
+  const status = (['Accepted', 'Rejected', 'Pending'] as const).includes(record.status as any)
     ? (record.status as MatchRecord['status'])
     : 'Pending';
 
@@ -127,14 +144,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     setLoading(true);
     try {
-      const [coinsResponse, matchResponse, candidateResponse] = await Promise.all([
+      const [coinsResponse, matchResponse, onlineResponse] = await Promise.all([
         fetchMuseumCoins(token),
         fetchMatchHistory(token),
-        fetchCandidates(token)
+        fetchOnlineCoins(token)
       ]);
 
       const coins = coinsResponse.map((coin) => normalizeCoin(coin));
-      const candidates = candidateResponse.map((candidate) => normalizeCandidate(candidate));
+      const candidates = onlineResponse.map((candidate) => normalizeCandidate(candidate));
       const matches = matchResponse.items.map((item) => normalizeMatch(item, coins, candidates));
 
       setMuseumCoins(coins);
@@ -187,8 +204,54 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo<DataContextValue>(
-    () => ({ museumCoins, candidateCoins, matchHistory, loading, refreshData, logMatchDecision }),
-    [museumCoins, candidateCoins, matchHistory, loading, refreshData, logMatchDecision]
+    () => ({
+      museumCoins,
+      candidateCoins,
+      matchHistory,
+      loading,
+      refreshData,
+      logMatchDecision,
+      searchCandidates: async (query: string) => {
+        if (!token) {
+          return [];
+        }
+        const results = await fetchCandidates(token, query);
+        return results.map((item) => normalizeCandidate(item));
+      },
+      syncRemoteSources: async () => {
+        if (!token) {
+          throw new Error('No active session');
+        }
+        const outcome = await syncSources(token);
+        await refreshData();
+        return outcome;
+      },
+      runMatchingJob: async () => {
+        if (!token) {
+          throw new Error('No active session');
+        }
+        const outcome = await runMatching(token);
+        await refreshData();
+        return outcome;
+      },
+      uploadMuseumDataset: async (payload: unknown) => {
+        if (!token) {
+          throw new Error('No active session');
+        }
+        const response = await uploadMuseumCoins(token, payload);
+        await refreshData();
+        return response.count;
+      },
+      uploadOnlineDataset: async (payload: unknown) => {
+        if (!token) {
+          throw new Error('No active session');
+        }
+        const response = await uploadOnlineCoins(token, payload);
+        await refreshData();
+        return response.count;
+      }
+    }),
+    [museumCoins, candidateCoins, matchHistory, loading, refreshData, logMatchDecision, token]
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

@@ -3,7 +3,7 @@ import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { useData } from '../context/DataContext';
 import { formatIsoDate, formatCoinTitle } from '../utils/coinFormatting';
 
-const statusFilters = ['All statuses', 'Confirmed', 'Pending', 'Rejected'] as const;
+const statusFilters = ['All statuses', 'Accepted', 'Pending', 'Rejected'] as const;
 
 export default function MatchHistoryPage() {
   const { matchHistory, museumCoins, candidateCoins, loading } = useData();
@@ -123,7 +123,7 @@ export default function MatchHistoryPage() {
 }
 
 function statusBadgeClass(status: string) {
-  if (status === 'Confirmed') return 'bg-gold-500/10 text-gold-600 border border-gold-300';
+  if (status === 'Accepted') return 'bg-gold-500/10 text-gold-600 border border-gold-300';
   if (status === 'Rejected') return 'bg-rose-100 text-rose-500 border border-rose-200';
   return 'bg-amber-50 text-amber-600 border border-amber-200';
 }

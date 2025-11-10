@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     restoreSession().catch((error) => {
       console.error('Unexpected error restoring session', error);
-      setLoading(false);
+    setLoading(false);
     });
   }, []);
 
