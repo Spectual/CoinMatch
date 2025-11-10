@@ -4,34 +4,52 @@ CoinMatch is a frontend prototype for museum researchers to identify potentially
 
 ## Repository Structure
 
-- `CoinMatch_Product_Description.md` – original product brief outlining experience goals.
-- `coin_metadata.md` – canonical schema for coin records (mint, authority, provenance, imagery, etc.).
-- `app/` – Vite + React + Tailwind implementation of the CoinMatch UI.
+- `README.md` – this overview.
+- `docs/` – product brief, API contract, and canonical coin metadata schema.
+- `app/` – Vite + React (TypeScript) frontend with Tailwind styling.
+- `backend/` – FastAPI backend (Python) providing REST APIs, ingestion, and matching.
 
 ## Getting Started
 
+### Backend
 ```bash
-cd app
-npm install  # install dependencies (requires network access)
-npm run dev  # launch the development server
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# optional: configure via environment variables
+export COINMATCH_DATABASE_URL="sqlite:///./coinmatch.db"
+export COINMATCH_SECRET_KEY="dev-secret"
+
+python -m app.seed          # create schema and sample data (once)
+uvicorn app.main:app --reload
 ```
 
-Additional scripts are defined in `app/package.json` for production builds (`npm run build`) and previews (`npm run preview`).
+### Frontend
+```bash
+cd app
+npm install
+echo "VITE_API_BASE_URL=http://127.0.0.1:8000" > .env.local
+npm run dev
+```
 
-## Tech Stack
+Default login (from the seed script): `laure_marest@harvard.edu / coinmatch123`.
 
-- React 18 with React Router
-- TailwindCSS for styling
-- Heroicons + Headless UI components
-- TypeScript and Vite for bundling
+## Key Features
 
-## Contributing
+- **Unified coin model**: both museum and online coins follow the schema in `docs/coin_metadata.md`, including imagery, measurements, inscriptions, and provenance fields.
+- **Data ingestion**: ingest remote JSON feeds (`python -m app.ingest` or `POST /api/admin/sync`) and manual uploads (`POST /api/museum-coins`, `POST /api/online-coins`).
+- **Matching workflow**: run the heuristic matcher (`POST /api/admin/match`) to create/update `matches`, review in the UI, and mark decisions as `Accepted`, `Rejected`, or `Pending`.
+- **Admin tooling**: the frontend `/admin/tools` page supports syncing datasets, running matches, and uploading JSON payloads for testing.
 
-1. Fork the repository and create a feature branch.
-2. Install dependencies from the `app/` directory and run `npm run dev` for local development.
-3. Keep UI additions aligned with the aesthetic described in the product brief.
-4. Open a pull request summarizing changes and any outstanding questions.
+## Documentation
+
+- `docs/API_SPEC.md` – backend contract consumed by the frontend.
+- `docs/coin_metadata.md` – detailed coin field definitions.
+- `backend/DATA_MODEL.md` – storage schema and matching flow.
+- Inline README files inside `app/` and `backend/` explain stack-specific details.
 
 ## License
 
-This project is released under the MIT License. See [LICENSE](LICENSE) for details.
+Released under the MIT License. See [LICENSE](LICENSE) for details.
