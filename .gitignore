@@ -24,6 +24,12 @@ backend/.env
 backend/.env.*
 backend/*.db
 backend/*.sqlite*
+backend/alembic/
+backend/app/__pycache__/
+backend/DATA_MODEL.md.bak
+
+# Upload artifacts
+uploads/
 
 # Logs
 *.log
