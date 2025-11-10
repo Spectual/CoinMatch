@@ -38,3 +38,6 @@ Thumbs.db
 # Editor config
 .vscode/
 .idea/
+
+# notes
+notes/
